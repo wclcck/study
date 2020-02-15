@@ -1,0 +1,101 @@
+CentOS-7-x86_64-DVD-1908.iso
+安装Nginx
+1	cd /etc/yum.repos.d
+	rpm -ivh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
+	yum -y install nginx
+
+2	yum -y install gcc gcc-c++
+	yum -y install pcre pcre-devel
+	yum -y install zlib zlib-devel 
+	yum -y install openssl openssl-devel
+	cd /usr/local/
+	mkdir nginx
+                cd opt
+	yum install wget
+	wget http://nginx.org/download/nginx-1.13.11.tar.gz
+	tar -zxvf  nginx-1.13.11.tar.gz
+	cd nginx-1.13.11
+	./configure --prefix=/usr/local/nginx # 检查平台安装环境
+	make # 编译
+	make install # 安装
+
+	/usr/local/nginx/sbin/nginx # 启动
+	/usr/local/nginx/sbin/nginx -s reload # 重新加载服务
+	/usr/local/nginx/sbin/nginx -s stop #停止服务
+	ps -ef | grep nginx # 查看服务进程
+	ss -tanl #查看端口号
+	/sbin/iptables -I INPUT -p tcp --dport 80 -j ACCEPT #开启80端口 
+	浏览器输入 ip  访问nginx主页
+
+Nginx负载均衡（反向代理）
+
+Nginx日志切割
+	cd /usr/local/nginx/nginx_log.sh #新建shell脚本
+	  内容如下：
+		#!/bin/bash
+		#设置日志文件存放目录
+		LOG_HOME="/usr/local/nginx/logs"
+		#备份文件名称
+		LOG_PATH_BAK="$(date -d yesterday +%Y%m%d%H%M)".access.log
+		#Nginx进程
+		PID_PATH=`cat /usr/local/nginx/logs/nginx.pid`
+		#重命名日志文件
+		mv ${LOG_HOME}/access.log ${LOG_HOME}/${LOG_PATH_BAK}.log
+		#向nginx主进程发信号重新打开日志
+		kill -USR1 $PID_PATH
+	加到cron计划任务中（百度cron表达式）
+		0 * * * * ? *  sh /usr/local/nginx/nginx_log.sh
+
+Nginx动静分离
+		location ~ .*\.(htm|html|gif|jpg|jpeg|png|bmp|swf|ioc|rar|zip|txt|flv|mid|doc|ppt|pdf|xls|mp3|wma)$
+		{
+			root /static;
+			expires 30d;
+		}
+		#静态文件交给nginx处理
+		location ~ .*\.(js|css)?$
+		{
+			root /static;
+			expires 1h;
+		}
+
+Nginx限流
+	Ab工具：压力测试  yum install httpd-tools -y
+		              测试 ab -c 10 -n 1000 http://www.baidu.com
+	针对前端限流，令牌桶算法：
+		http {
+    			limit_req_zone $binary_remote_addr zone=one:10m rate=1r/s;
+    			server {
+        			location /search/ {
+            				limit_req zone=one burst=5 nodelay;
+        			}
+		} 
+	针对后端限流
+		upstream xxxx{ 
+  
+ 			server 127.0.0.1:8080 max_conns=10; 
+  
+ 			server 127.0.0.1:8081 max_conns=10; 
+  
+		} 
+
+Nginx安全配置
+	版本安全 
+		http{server_tokens off;}
+	IP安全     
+		location /{
+			deny 192.168.1.1
+			allow all;
+		}
+	文件安全 文件列表
+	连接安全 https
+
+Nginx进程数、并发数、系统优化 
+	worker_process 2; #调整到与CPU数量一致
+	events{
+		worker_connection 65535;   #1024*worker_process
+	}
+
+	命令ulimit
+
+	gzip压缩
