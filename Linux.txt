@@ -1,0 +1,152 @@
+!--Linux命令：export LC_ALL=zh_CN.GB2312;export LANG=zh_CN.GB2312(ssh乱码)
+              进入/etc/locale.conf LANG="zh_CN.gbk"  source /etc/locale.conf
+!--设置权限   chmod -R  777 *
+
+!--修改ssh长连接
+	修改server端的etc/ssh/sshd_config
+	TCPKeepAlive yes
+	ClientAliveInterval 60 ＃server每隔60秒发送一次请求给client，然后client响应，从而保持连接
+	ClientAliveCountMax 3 ＃server发出请求后，客户端没有响应得次数达到3，就自动断开连接，正常情况下，client不会不响应
+	systemctl restart sshd
+
+!--删除当前目录下caco文件夹   rm -rf caco  
+ 
+!--解压zip到当前  unzip a.zip
+
+!--压缩当前目录下所有文件夹到当前目录下的a.tar   tar -cvf a.tar *
+
+!--设置ip /etc/sysconfig/network-scripts/ifcfg-eno2
+
+!--网站目录域名配置：/usr/local/nginx/conf/vhost/  重启服务：service nginx reload
+
+!--查看磁盘空间大小命令  df -hl    du -h --max-depth=1 当前目录下1级文件大小
+  查看前10个最占空间的文件或目录  du -sm * |sort -rn|head -10
+
+!--复制  cp -r 复制的文件 目标路径
+
+!--查看进程  ps -ef      ps -aux      top    pstree   pgrep -l php
+
+!--登录  who
+
+!--网络 netstat
+	netstat -tln : 端口使用情况
+	netstat -anp | grep 'ESTABLISHED' : 查看已建立的TCP连接并显示对应的服务程序名
+        
+!--修复数据表  myisamchk -c -r /www/data_dir/wxtest/ims_core_sessions.MYI
+	autoindex on;#开启nginx目录浏览功能
+    
+	autoindex_exact_size off;#文件大小从KB开始显示
+    
+	autoindex_localtime on;#显示文件修改时间为服务器本地时间
+	
+!--重启命令：
+
+	1、reboot
+
+	2、shutdown -r now 立刻重启(root用户使用)
+
+	3、shutdown -r 10 过10分钟自动重启(root用户使用)
+
+	4、shutdown -r 20:35 在时间为20:35时候重启(root用户使用)
+
+
+
+!--关机命令：
+
+	1、halt   立刻关机
+
+	2、poweroff  立刻关机
+
+	3、shutdown -h now 立刻关机(root用户使用)
+
+	4、shutdown -h 10 10分钟后自动关机
+
+
+!--php重启
+	systemctl restart php-fpm.service 
+
+
+!--nginx 服务器重启命令，关闭
+	nginx -s reload  ：修改配置后重新加载生效
+	nginx -s reopen  ：重新打开日志文件
+	nginx -t -c /path/to/nginx.conf 测试nginx配置文件是否正确
+
+	关闭nginx：
+	nginx -s stop  :快速停止nginx
+         	quit  ：完整有序的停止nginx
+
+	其他的停止nginx 方式：
+
+	ps -ef | grep nginx
+
+	kill -QUIT 主进程号     ：从容停止Nginx
+	kill -TERM 主进程号     ：快速停止Nginx
+	pkill -9 nginx          ：强制停止Nginx
+
+	启动nginx:
+	nginx -c /path/to/nginx.conf
+
+	平滑重启nginx：
+	kill -HUP 主进程号
+
+
+!--DDOS：
+
+	#这个命令对于在服务器上找出活跃的SYNC_REC非常有用,数量应该很低,最好少于5.在dos攻击和邮件炸弹,这个数字可能非常高.然而值通常依赖于系统,所以高的值可能平分给另外的服务器.
+	netstat -n -p|grep SYN_REC | wc -l
+
+	netstat -an | grep :80 | sort | more 只显示连接到80段口的活跃的网络连接,80是http端口,这对于web服务器非常有用,并且对结果排序.对于你从许多的连接中找出单个发动洪水攻击IP非常有用
+
+	并发连接
+ 	
+	netstat -nat|grep ESTABLISHED|wc -l 
+
+	当前最大连接数
+	ulimit -n
+
+	查看
+	iptables -nL --line-number
+
+	要封停一个IP，使用下面这条命令：
+
+	#iptables -I INPUT -s ***.***.***.*** -j DROP
+
+	要解封一个IP，使用下面这条命令：
+
+	#iptables -D INPUT -s ***.***.***.*** -j DROP
+
+	封单个IP的命令是：
+	iptables -I INPUT -s 211.1.0.0 -j DROP
+
+	封IP段的命令是：
+	iptables -I INPUT -s 211.1.0.0/16 -j DROP
+	iptables -I INPUT -s 211.2.0.0/16 -j DROP
+	iptables -I INPUT -s 211.3.0.0/16 -j DROP
+
+	封整个段的命令是：
+	iptables -I INPUT -s 211.0.0.0/8 -j DROP
+
+	封几个段的命令是：
+	iptables -I INPUT -s 61.37.80.0/24 -j DROP
+	iptables -I INPUT -s 61.37.81.0/24 -j DROP
+
+!--radhat系统错误
+
+　　/var/log/message 系统启动后的信息和错误日志，是Red Hat Linux中最常用的日志之一
+　　/var/log/secure 与安全相关的日志信息
+　　/var/log/maillog 与邮件相关的日志信息
+　　/var/log/cron 与定时任务相关的日志信息
+　　/var/log/spooler 与UUCP和news设备相关的日志信息
+　　/var/log/boot.log 守护进程启动和停止相关的日志消息
+
+!--修改ip vi  /etc/sysconfig/network-scripts/ifcfg-ethx 
+
+!--定时任务 
+        查看crontab -l    
+	编辑 crontab -e
+	0 9 * * * /etc/init.d/nginx start
+	30 17 * * * /etc/init.d/nginx stop
+	重启 service crond restart
+
+
+
